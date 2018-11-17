@@ -1,0 +1,3 @@
+httpfs -v -p 8080 // efault file path
+httpfs -v -p 8080 -d C:\Users\wshy8\Downloads
+httpfs -v -p 8080 -d C:\Users\wshy8\Downloads\GitHub\HttpClient-Implementation\HttpServer\src

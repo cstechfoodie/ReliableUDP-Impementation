@@ -1,0 +1,15 @@
+httpc post -h Content-Type:application/json -d '{"Assignment":1}' 'http://httpbin.org/post'
+httpc post -v -h Content-Type:application/json -d '{"Assignment":1}' 'http://httpbin.org/post'
+httpc post -v -h Content-Type:application/json -d '{"Assignment":1}' 'http://httpbin.org/post' -o hello.txt
+
+httpc get 'http://www.google.com' -o google.html
+httpc get 'http://httpbin.org/get?course=networking&assignment=1'
+httpc get -v 'http://httpbin.org/get?course=networking&assignment=1'
+
+httpc get -v 'http://httpbin.org/get?course=networking&assignment=1' -o hello.txt
+
+httpc get -v 'http://localhost/foo.txt'
+httpc get -v 'http://localhost/something/foo.txt'
+
+httpc post -v 'http://localhost/create.txt' -h Content-Type:application/json -d '{"Assignment":1}'
+httpc post -v 'http://localhost/unauthorizedDirectory/create.txt' -h Content-Type:application/json -d '{"Assignment":1}'
