@@ -157,6 +157,7 @@ public class Https {
 						res.setBody("You are not authorized to work on this directory");
 						out.writeBytes(res.toString());
 						out.flush();
+						out.close();
 					} else {
 						if (req.getMethod().toString().equals("GET")) {
 							if (req.getURI().length() == 1 && req.getURI().equals("/")) {
@@ -177,6 +178,7 @@ public class Https {
 								res.setBody(bld.toString());
 								out.writeBytes(res.toString());
 								out.flush();
+								out.close();
 								
 							} else {
 								String fileName = req.getURI().substring(1);
@@ -201,6 +203,7 @@ public class Https {
 									res.setBody(bld.toString());
 									out.writeBytes(res.toString());
 									out.flush();
+									out.close();
 								} catch (Exception e) {
 									res = new ClientHttpResponse();
 									res.setStatusCode("404");
@@ -208,6 +211,7 @@ public class Https {
 									res.setBody("Failed to read the file due to file not found");
 									out.writeBytes(res.toString());	
 									out.flush();
+									out.close();
 								}
 							}
 						}
@@ -250,6 +254,8 @@ public class Https {
 					e.printStackTrace();
 				} finally {
 					skt.close();
+					out.close();
+					in.close();
 				}
 			}
 		}

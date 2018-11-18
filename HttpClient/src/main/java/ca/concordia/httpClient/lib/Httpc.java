@@ -79,11 +79,11 @@ public class Httpc {
 		} else if (!isConnected && cmd.startsWith("httpc")) {
 			if (args[1].trim().equals("get")) {
 				req = makeGetRequestObject(cmd, args); // fabricate a request based on curl cmd the user provide
-				connect(req.getHost(), req.getPort());
+				//connect(req.getHost(), req.getPort());
 			}
 			else if (args[1].trim().equals("post")) {
 				req = makePostRequestObject(cmd, args); // fabricate a request based on curl cmd the user provide
-				connect(req.getHost(), req.getPort());
+				//connect(req.getHost(), req.getPort());
 			}
 			else{
 				System.out.println("Invalid Command! please check 'httpc help'");
