@@ -10,21 +10,18 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.nio.channels.spi.SelectorProvider;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class ReliableUDP {
 
 	private static final Logger logger = LoggerFactory.getLogger(ReliableUDP.class);
 
-	public boolean handShakeDone = false;
+	public static boolean handShakeDone = false;
 
 	private static int[] acks;
 
@@ -60,12 +57,11 @@ public class ReliableUDP {
 			
 			createPackets(payload, packetnumber, routerAddr, serverAddr);
 			
-			//handshake
-//			Packet p = new Packet.Builder().setType(0).setSequenceNumber(1L).setPortNumber(serverAddr.getPort())
-//					.setPeerAddress(serverAddr.getAddress()).setPayload("Hi".getBytes()).create();
-//			
-//			p = new Packet.Builder().setType(0).setSequenceNumber(1L).setPortNumber(serverAddr.getPort())
-//					.setPeerAddress(serverAddr.getAddress()).setPayload(("" + packetnumber).getBytes()).create();
+			handShake(packetnumber, routerAddr, serverAddr);
+			
+			if(!handShakeDone) {
+				return null;
+			}
 			
 			Selector selector = Selector.open();
 			for(int i = 0; i < packetnumber; i++) {
@@ -74,8 +70,8 @@ public class ReliableUDP {
 				channel.connect(routerAddr);
 				channel.register(selector, OP_READ);
 				
-				SenderThread a = new SenderThread(spackets[i], channel, acks);
-				a.start();
+				SenderThread sender = new SenderThread(spackets[i], channel, acks);
+				sender.start();
 				logger.info("Sending \"{}\" to router at {}", payload, routerAddr);				
 			}
 
@@ -118,10 +114,6 @@ public class ReliableUDP {
 					keys.clear();
 				}
 			}
-//			logger.info("Packet: {}", resp);
-//			logger.info("Router: {}", router);
-//			payload = new String(resp.getPayload(), StandardCharsets.UTF_8);
-//			logger.info("Payload: {}", payload);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -144,7 +136,7 @@ public class ReliableUDP {
 				singlePayload = payload.substring(i * 1013);
 			}
 			try {
-				p = new Packet.Builder().setType(0).setSequenceNumber(1L).setPortNumber(serverAddr.getPort())
+				p = new Packet.Builder().setType(0).setSequenceNumber(i+1).setPortNumber(serverAddr.getPort())
 						.setPeerAddress(serverAddr.getAddress()).setPayload(singlePayload.getBytes("UTF-8")).create();
 			} catch (UnsupportedEncodingException e) {
 				// TODO Auto-generated catch block
@@ -153,6 +145,90 @@ public class ReliableUDP {
 			
 			spackets[i] = p;	
 		}
+	}
+	
+	//SYN(client) --> SYN-ACK(server) --> ACK(client) --> ACK-ACK(server)
+	private static void handShake(int packetNumber, SocketAddress routerAddr, InetSocketAddress serverAddr) throws IOException {
+		Selector selector = Selector.open();
+		DatagramChannel channel = DatagramChannel.open();
+		
+		Packet p = new Packet.Builder().setType(1).setSequenceNumber(1L).setPortNumber(serverAddr.getPort())
+		.setPeerAddress(serverAddr.getAddress()).setPayload(("SYN"+ packetNumber).getBytes("UTF-8")).create();
+		channel.configureBlocking(false);
+		SelectionKey key = channel.register(selector, OP_READ);
+		
+		String payload = "";
+		while(true) {
+			channel.send(p.toBuffer(), routerAddr);
+			logger.info("Sending \"{}\" to router at {}", "SYN", routerAddr);
+			
+			
+			logger.info("Waiting for the response for first handshake request");
+			selector.select(5000);
+			
+			Set<SelectionKey> keys = selector.selectedKeys();
+			if(keys.isEmpty()){
+				logger.error("No response for first handshakes after timeout. Will resend again");
+				continue;
+			}
+			
+			// We just want a single response.
+			ByteBuffer buf = ByteBuffer.allocate(Packet.MAX_LEN);
+			SocketAddress router = channel.receive(buf);
+			buf.flip();
+			Packet resp = Packet.fromBuffer(buf);
+			logger.info("Packet: {}", resp);
+			logger.info("Router: {}", router);
+			payload = new String(resp.getPayload(), StandardCharsets.UTF_8);
+			logger.info("Payload: {}",  payload);
+			
+			keys.clear();
+			
+			if(payload.trim().equals("SYN-ACK")) {
+				break;
+			}
+			
+		}
+		
+
+		if(payload.trim().equals("SYN-ACK")) {
+			p = new Packet.Builder().setType(2).setSequenceNumber(1L).setPortNumber(serverAddr.getPort())
+					.setPeerAddress(serverAddr.getAddress()).setPayload("ACK".getBytes("UTF-8")).create();
+			
+			logger.info("Sending \"{}\" to router at {}", "SYN", routerAddr);
+			channel.send(p.toBuffer(), routerAddr);
+			
+			
+	        logger.info("Waiting for the response for first handshake request");
+	        selector.select(5000);
+
+	        Set<SelectionKey> keys = selector.selectedKeys();
+	        if(keys.isEmpty()){
+	        	handShakeDone = true;
+	            logger.error("No response for second handshakes after timeout");
+	            return;
+	        }
+
+	        // We just want a single response.
+	        ByteBuffer buf = ByteBuffer.allocate(Packet.MAX_LEN);
+	        SocketAddress router = channel.receive(buf);
+	        buf.flip();
+	        Packet resp = Packet.fromBuffer(buf);
+	        logger.info("Packet: {}", resp);
+	        logger.info("Router: {}", router);
+	        payload = new String(resp.getPayload(), StandardCharsets.UTF_8);
+	        logger.info("Payload: {}",  payload);
+
+	        keys.clear();
+	        
+	        if(payload.trim().equals("ACK-ACK") || payload.trim().equals("SYN-ACK")) {
+	        	handShakeDone = true;
+	        }
+		}
+		
+		key.cancel();
+		channel.close();
+		selector.close();
 	}
 
 }
