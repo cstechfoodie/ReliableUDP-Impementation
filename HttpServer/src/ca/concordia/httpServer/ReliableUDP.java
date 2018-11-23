@@ -70,6 +70,7 @@ public class ReliableUDP {
 				}
 				
 				if(!handShakeDone) {
+
 					return null;
 				}
 				
@@ -98,5 +99,17 @@ public class ReliableUDP {
 			}
 
 		}
+		//return compileResponse;
 	}
+	
+	private String compileResponse() {
+		StringBuilder str = new StringBuilder();
+		String payload = "";
+		for(int i=0; i<rpackets.length;i++) {
+			payload = new String(rpackets[i].getPayload(), StandardCharsets.UTF_8);
+		    str.append(payload);
+		}
+		return str.toString();
+	}
+	
 }
