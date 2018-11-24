@@ -14,7 +14,7 @@ public abstract class ClientHttpRequest {
 	
 	private String host;
 	
-	private int port = 80;
+	private int port = 8080;
 	
 	private Map<String, String> queries = new HashMap<String, String>();
 	

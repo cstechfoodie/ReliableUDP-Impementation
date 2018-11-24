@@ -1,14 +1,18 @@
 package ca.concordia.httpClient.lib;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
@@ -299,25 +303,68 @@ public class Httpc {
 	 * after the request object is made, call this method to send the request and
 	 * receive response as string
 	 */
+//	private ClientHttpResponse sendAndReceive() {
+//		DataOutputStream out = null;
+//		BufferedReader in = null;
+//		ReliableUDP udp = new ReliableUDP();
+//		try {
+//			out = new DataOutputStream(socket.getOutputStream());
+//			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//
+//		if (socket != null && out != null && in != null) {
+//			try {
+//				out.writeBytes(req.toString());
+//				StringBuilder bld = new StringBuilder();
+//				String line = null;
+//				res = new ClientHttpResponse();
+//				int lineCount = 0;
+//				while ((line = in.readLine()) != null) {
+//					lineCount++;
+//					if (lineCount == 1) {
+//						String[] first = line.split(" ");
+//						res.setVersion(first[0]);
+//						res.setStatusCode(first[1]);
+//						res.setResponseMessage(first[2]);
+//					}
+//					if (line.trim().length() == 0) {
+//						res.setHeader(bld.toString());
+//						bld = new StringBuilder();
+//					}
+//					bld.append(line + "\r\n");
+//				}
+//				res.setBody(bld.toString());
+//				String[] headers = res.getHeader().trim().split("\r\n");
+//				for (int i = 0; i < headers.length; i++) {
+//					String[] pair = headers[i].split(":");
+//					if (pair.length == 2)
+//						res.getHeaders().put(pair[0].trim(), pair[1].trim());
+//				}
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//		return res;
+//	}
+	
 	private ClientHttpResponse sendAndReceive() {
-		DataOutputStream out = null;
-		BufferedReader in = null;
-		try {
-			out = new DataOutputStream(socket.getOutputStream());
-			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		if (socket != null && out != null && in != null) {
+		ReliableUDP udp = new ReliableUDP();
+		if (udp != null) {
 			try {
-				out.writeBytes(req.toString());
+				udp.send(req.toString(), new InetSocketAddress("localhost", 3000), new InetSocketAddress("localhost", 8007));;
 				StringBuilder bld = new StringBuilder();
 				String line = null;
 				res = new ClientHttpResponse();
 				int lineCount = 0;
+				
+				String reply = udp.receive(12345);
+				
+				InputStream replyStream = new ByteArrayInputStream(reply.getBytes(StandardCharsets.UTF_8));
+				BufferedReader in = new BufferedReader(new InputStreamReader(replyStream));
 				while ((line = in.readLine()) != null) {
 					lineCount++;
 					if (lineCount == 1) {
