@@ -24,11 +24,12 @@ public class ConsoleApp
 			try {
 				String cmd = scanner.nextLine().trim();
 				httpc.commandLineParser(cmd);
-				if(httpc.isConnected()) {
+//				if(httpc.isConnected()) {
 					httpc.displayResult();
-				}
+//				}
 			} catch (Exception e) {
 				System.out.println("Error cmd message. Please check 'httpc help'");
+				e.printStackTrace();
 			}
 			
 		}

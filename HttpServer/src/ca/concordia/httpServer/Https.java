@@ -12,6 +12,8 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 import org.comp445.httpReliableUDP.ReliableUDP;
@@ -65,32 +67,32 @@ public class Https {
 		}
 	}
 
-//	public void setupServer(String cmd) {
-//		String[] args = cmd.split(" ");
-//		sanitizeArgs(args);
-//
-//		List<String> argsList = Arrays.asList(args);
-//
-//		if (cmd.contains("-v")) {
-//			hasDebuggingMessage = true;
-//		}
-//
-//		if (cmd.contains("-p")) {
-//			int index = argsList.indexOf("-p");
-//			String h = argsList.get(index + 1);
-//			port = Integer.parseInt(h);
-//		}
-//
-//		if (cmd.contains("-d")) {
-//			int index = argsList.indexOf("-d");
-//			pathToDir = argsList.get(index + 1);
-//			File f = new File(pathToDir);
-//			if(!f.exists()) {
-//				new File(pathToDir).mkdirs();				
-//			}
-//		}
-//		connect();
-//	}
+	public void setupServer(String cmd) {
+		String[] args = cmd.split(" ");
+		sanitizeArgs(args);
+
+		List<String> argsList = Arrays.asList(args);
+
+		if (cmd.contains("-v")) {
+			hasDebuggingMessage = true;
+		}
+
+		if (cmd.contains("-p")) {
+			int index = argsList.indexOf("-p");
+			String h = argsList.get(index + 1);
+			port = Integer.parseInt(h);
+		}
+
+		if (cmd.contains("-d")) {
+			int index = argsList.indexOf("-d");
+			pathToDir = argsList.get(index + 1);
+			File f = new File(pathToDir);
+			if(!f.exists()) {
+				new File(pathToDir).mkdirs();				
+			}
+		}
+		//connect();
+	}
 //
 //	private void connect() {
 //		try {
@@ -112,7 +114,7 @@ public class Https {
 			BufferedReader in = null;
 			String request = null;
 			try {
-				request = udp.receive(8007);
+				request = udp.receive(port);
 				InputStream replyStream = new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8));
 				in = new BufferedReader(new InputStreamReader(replyStream));
 			} catch (Exception e) {
@@ -148,6 +150,14 @@ public class Https {
 								 break;
 							 }
 						 }
+//						 
+//						 if (line.trim().length() == 0 && lines == 0) {
+//							 if(lines == 0) {
+//								 bld = new StringBuilder();
+//								 lines = 1;
+//								 continue;								 
+//							 }
+//						 }
 						 	bld.append(line + "\r\n");
 					}
 					req.setBody(bld.toString());

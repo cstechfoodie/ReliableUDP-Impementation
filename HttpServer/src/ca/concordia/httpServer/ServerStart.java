@@ -5,13 +5,14 @@ import java.util.Scanner;
 public class ServerStart {
 
 	public static void main(String[] args) {
-		System.out.println("Welcome to use Https. Please set up your server config:");
+		System.out.println("Welcome to use Https. Please feel our amazing reliable UDP! LOL^_^");
+		System.out.println("Please set up your server config:");
 		Scanner scanner = new Scanner(System.in);
 		Https https = new Https();
 
 		try {
-//			String cmd = scanner.nextLine().trim();
-//			https.setupServer(cmd);
+			String cmd = scanner.nextLine().trim();
+			https.setupServer(cmd);
 			while(true) {
 //				if (https.isConnected()) {
 					https.receiveAndReply();

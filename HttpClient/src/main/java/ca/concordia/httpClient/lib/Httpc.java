@@ -366,7 +366,7 @@ public class Httpc {
 				
 				InputStream replyStream = new ByteArrayInputStream(reply.getBytes(StandardCharsets.UTF_8));
 				BufferedReader in = new BufferedReader(new InputStreamReader(replyStream));
-				
+				boolean firstLine = true;
 				while ((line = in.readLine()) != null) {
 					lineCount++;
 					if (lineCount == 1) {
@@ -375,9 +375,10 @@ public class Httpc {
 						res.setStatusCode(first[1]);
 						res.setResponseMessage(first[2]);
 					}
-					if (line.trim().length() == 0) {
+					if (firstLine && line.trim().length() == 0) {
 						res.setHeader(bld.toString());
 						bld = new StringBuilder();
+						firstLine = false;
 					}
 					bld.append(line + "\r\n");
 				}
@@ -417,13 +418,15 @@ public class Httpc {
 			}
 		} else {
 			if (!req.isVerbose()) {
+				System.out.println("-------------------------Reply Message(Not Verbose)----------------------");
 				System.out.println(res.getBody());
 			} else {
+				System.out.println("-------------------------Reply Message(Verbose)----------------------");
 				System.out.println(res.toString());
 			}
 		}
 
-		close();
+		//close();
 		this.isConnected = false;
 	}
 
