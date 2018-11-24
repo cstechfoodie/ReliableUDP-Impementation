@@ -1,16 +1,21 @@
 package ca.concordia.httpServer;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
+
+import org.comp445.httpReliableUDP.ReliableUDP;
+
 
 public class Https {
 	// request
@@ -60,66 +65,63 @@ public class Https {
 		}
 	}
 
-	public void setupServer(String cmd) {
-		String[] args = cmd.split(" ");
-		sanitizeArgs(args);
-
-		List<String> argsList = Arrays.asList(args);
-
-		if (cmd.contains("-v")) {
-			hasDebuggingMessage = true;
-		}
-
-		if (cmd.contains("-p")) {
-			int index = argsList.indexOf("-p");
-			String h = argsList.get(index + 1);
-			port = Integer.parseInt(h);
-		}
-
-		if (cmd.contains("-d")) {
-			int index = argsList.indexOf("-d");
-			pathToDir = argsList.get(index + 1);
-			File f = new File(pathToDir);
-			if(!f.exists()) {
-				new File(pathToDir).mkdirs();				
-			}
-		}
-		connect();
-	}
-
-	private void connect() {
-		try {
-			socket = new ServerSocket(port);
-			this.isConnected = true;
-			System.out.println("Server Created Successfully with on "+ port);
-		} catch (Exception e) {
-			if (hasDebuggingMessage) {
-				System.out.println("Connection Failed with Exception.");
-				e.printStackTrace();
-			}
-		}
-	}
+//	public void setupServer(String cmd) {
+//		String[] args = cmd.split(" ");
+//		sanitizeArgs(args);
+//
+//		List<String> argsList = Arrays.asList(args);
+//
+//		if (cmd.contains("-v")) {
+//			hasDebuggingMessage = true;
+//		}
+//
+//		if (cmd.contains("-p")) {
+//			int index = argsList.indexOf("-p");
+//			String h = argsList.get(index + 1);
+//			port = Integer.parseInt(h);
+//		}
+//
+//		if (cmd.contains("-d")) {
+//			int index = argsList.indexOf("-d");
+//			pathToDir = argsList.get(index + 1);
+//			File f = new File(pathToDir);
+//			if(!f.exists()) {
+//				new File(pathToDir).mkdirs();				
+//			}
+//		}
+//		connect();
+//	}
+//
+//	private void connect() {
+//		try {
+//			socket = new ServerSocket(port);
+//			this.isConnected = true;
+//			System.out.println("Server Created Successfully with on "+ port);
+//		} catch (Exception e) {
+//			if (hasDebuggingMessage) {
+//				System.out.println("Connection Failed with Exception.");
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 
 	public void receiveAndReply() throws IOException {
 		while (true) {
-			DataOutputStream out = null;
+			
+			ReliableUDP udp = new ReliableUDP();
 			BufferedReader in = null;
-			Socket skt = null; 
+			String request = null;
 			try {
-				skt = socket.accept();
-				System.out.println("The socket is waiting request on port " + skt.getLocalPort());
-				out = new DataOutputStream(skt.getOutputStream());
-				in = new BufferedReader(new InputStreamReader(skt.getInputStream()));
-				
-
-			} catch (IOException e) {
+				request = udp.receive(8007);
+				InputStream replyStream = new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8));
+				in = new BufferedReader(new InputStreamReader(replyStream));
+			} catch (Exception e) {
 				if (hasDebuggingMessage) {
 					System.out.println("Failed to create socket connection and input/output stream reader");
 					e.printStackTrace();
 				}
 			}
-
-			if (skt != null && out != null && in != null) {
+			if (request != null && in != null) {
 				try {
 					StringBuilder bld = new StringBuilder();
 					String line = null;
@@ -155,9 +157,10 @@ public class Https {
 						res.setStatusCode("401");
 						res.setDescription("Unauthorized");
 						res.setBody("You are not authorized to work on this directory");
-						out.writeBytes(res.toString());
-						out.flush();
-						out.close();
+						udp.send(res.toString(), new InetSocketAddress("localhost", 3000), new InetSocketAddress("localhost", 12345));
+//						out.writeBytes(res.toString());
+//						out.flush();
+//						out.close();
 					} else {
 						if (req.getMethod().toString().equals("GET")) {
 							if (req.getURI().length() == 1 && req.getURI().equals("/")) {
@@ -176,9 +179,10 @@ public class Https {
 								res.setStatusCode("200");
 								res.setDescription("OK");
 								res.setBody(bld.toString());
-								out.writeBytes(res.toString());
-								out.flush();
-								out.close();
+								udp.send(res.toString(), new InetSocketAddress("localhost", 3000), new InetSocketAddress("localhost", 12345));
+//								out.writeBytes(res.toString());
+//								out.flush();
+//								out.close();
 								
 							} else {
 								String fileName = req.getURI().substring(1);
@@ -201,17 +205,19 @@ public class Https {
 									}
 									res = new ClientHttpResponse();
 									res.setBody(bld.toString());
-									out.writeBytes(res.toString());
-									out.flush();
-									out.close();
+									udp.send(res.toString(), new InetSocketAddress("localhost", 3000), new InetSocketAddress("localhost", 12345));
+//									out.writeBytes(res.toString());
+//									out.flush();
+//									out.close();
 								} catch (Exception e) {
 									res = new ClientHttpResponse();
 									res.setStatusCode("404");
 									res.setDescription("Not Found");
 									res.setBody("Failed to read the file due to file not found");
-									out.writeBytes(res.toString());	
-									out.flush();
-									out.close();
+									udp.send(res.toString(), new InetSocketAddress("localhost", 3000), new InetSocketAddress("localhost", 12345));
+//									out.writeBytes(res.toString());
+//									out.flush();
+//									out.close();
 								}
 							}
 						}
@@ -236,15 +242,19 @@ public class Https {
 								res.setStatusCode("200");
 								res.setDescription("OK");
 								res.setBody("Sucessfully create and write into the file");
-								out.writeBytes(res.toString());	
-								out.flush();
+								udp.send(res.toString(), new InetSocketAddress("localhost", 3000), new InetSocketAddress("localhost", 12345));
+//								out.writeBytes(res.toString());
+//								out.flush();
+//								out.close();
 							} catch (Exception e) {
 								res = new ClientHttpResponse();
 								res.setStatusCode("500");
 								res.setDescription("Internal Server Error");
 								res.setBody("Failed to create the file");
-								out.writeBytes(res.toString());	
-								out.flush();
+								udp.send(res.toString(), new InetSocketAddress("localhost", 3000), new InetSocketAddress("localhost", 12345));
+//								out.writeBytes(res.toString());
+//								out.flush();
+//								out.close();
 							}
 						}
 					}
@@ -253,8 +263,6 @@ public class Https {
 				} catch (IOException e) {
 					e.printStackTrace();
 				} finally {
-					skt.close();
-					out.close();
 					in.close();
 				}
 			}

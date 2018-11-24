@@ -2,7 +2,6 @@ package ca.concordia.httpClient.lib;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,10 +12,11 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+
+import org.comp445.httpReliableUDP.ReliableUDP;
 
 public class Httpc {
 
@@ -355,7 +355,8 @@ public class Httpc {
 		ReliableUDP udp = new ReliableUDP();
 		if (udp != null) {
 			try {
-				udp.send(req.toString(), new InetSocketAddress("localhost", 3000), new InetSocketAddress("localhost", 8007));;
+				udp.send(req.toString(), new InetSocketAddress("localhost", 3000), new InetSocketAddress("localhost", 8007));
+				
 				StringBuilder bld = new StringBuilder();
 				String line = null;
 				res = new ClientHttpResponse();
@@ -365,6 +366,7 @@ public class Httpc {
 				
 				InputStream replyStream = new ByteArrayInputStream(reply.getBytes(StandardCharsets.UTF_8));
 				BufferedReader in = new BufferedReader(new InputStreamReader(replyStream));
+				
 				while ((line = in.readLine()) != null) {
 					lineCount++;
 					if (lineCount == 1) {

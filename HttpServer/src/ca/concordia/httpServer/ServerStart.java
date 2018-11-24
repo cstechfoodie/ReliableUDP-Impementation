@@ -10,14 +10,14 @@ public class ServerStart {
 		Https https = new Https();
 
 		try {
-			String cmd = scanner.nextLine().trim();
-			https.setupServer(cmd);
-			//while(true) {
-				if (https.isConnected()) {
-					System.out.println("Https server is up!");
+//			String cmd = scanner.nextLine().trim();
+//			https.setupServer(cmd);
+			while(true) {
+//				if (https.isConnected()) {
 					https.receiveAndReply();
-				}			
-			//}
+					System.out.println("Https server is up!");
+//				}			
+			}
 		} catch (Exception e) {
 			System.out.println("Error cmd message. Please check 'httpc help'");
 		}
