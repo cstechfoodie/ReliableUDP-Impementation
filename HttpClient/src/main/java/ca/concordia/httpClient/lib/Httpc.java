@@ -35,6 +35,8 @@ public class Httpc {
 	private String helpFile;
 
 	private boolean isHelpFileCached = false;
+	
+	//private ReliableUDP udp = new ReliableUDP();
 
 	/**
 	 * @return the isConnected

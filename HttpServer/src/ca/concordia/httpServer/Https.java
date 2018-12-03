@@ -37,6 +37,8 @@ public class Https {
 	private String pathToDir = "/";
 
 	private boolean isConnected = false;
+	
+	//private ReliableUDP udp = new ReliableUDP();
 
 	public boolean isConnected() {
 		return isConnected;
