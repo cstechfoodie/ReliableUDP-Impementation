@@ -3,8 +3,7 @@ A simple implementation for reliable UDP socket for ConcordiaU COMP 445 Assignme
 
 ## Getting Started
 
-Import client, server, and reliableUDP project as maven project due to the last one depending on the previous
-
+Import client, server, and reliableUDP project as maven project due to the previous depending on the reliable udp socket. (other build config is okay)
 ### Attention
 
 This project is a good reference for your assignment one, two and three in COMP445 Computer Networking and Data Communications at **Concordia University, Montreal**. This implementation is not perfect in terms of code complexity and performace, but it is good enough to give you a 10/10 mark. But before you decide to refer to its idea, please understand the following issues:
